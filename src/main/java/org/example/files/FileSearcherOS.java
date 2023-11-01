@@ -1,7 +1,13 @@
 package org.example.files;
 
+import org.example.utils.StringUtils;
+
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -10,7 +16,7 @@ import java.util.function.Predicate;
  * @version 29.10.2023
  */
 public class FileSearcherOS implements FileSearcher {
-    private final String ROOT_DIRECTORY = "/src/main/resources/files";
+    private final String ROOT_DIRECTORY = "/Users/1ommy/development/IT-park/lessons/edo/src/main/resources/files/test";
 
     /**
      * @param rule         лямбда-функция,которая будет фильтровать все найденные в этой директории файлы
@@ -60,4 +66,74 @@ public class FileSearcherOS implements FileSearcher {
                 null
         );
     }
+
+    @Override
+    public void printFoldersTree(String path, int catalogTabSize) {
+        /*
+            1) открываем папочку
+            2) проверяем, что это директория
+            3) берем список всех дочерних элементов и бежим по нему
+            4) если встречаем директорию,рекурсивно вызываем себя же
+            5) если встретили файл, его печатаем
+         */
+
+        var file = new File(ROOT_DIRECTORY + path);
+
+        if (file.isDirectory()) {
+            var childElements = file.listFiles();
+
+            if (childElements == null) {
+                System.out.println("Каталог пуст");
+                return;
+            }
+
+            for (File element : childElements) {
+
+                var delimiter = StringUtils.multiplyString("-", catalogTabSize);
+
+                var pattern = element.isDirectory() ? "%s /%s%n" : "%s %s%n";
+                System.out.printf(pattern, delimiter, element.getName());
+                if (element.isDirectory()) {
+
+                    printFoldersTree("%s/%s".formatted(path, element.getName()), catalogTabSize + 1);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void deleteFile(String path) {
+        var file = new File(ROOT_DIRECTORY + path);
+
+        boolean delete = file.delete();
+
+        if (delete) {
+            System.out.println("Вы успешно удалили файл");
+        } else {
+            System.out.println("Что-то пошло не так");
+        }
+    }
+
+    public void deleteCatalog(String path) {
+        Path newPath = Path.of(ROOT_DIRECTORY, path);
+
+        try {
+            Files.walk(newPath)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+
+        } catch (IOException e) {
+            System.out.println("Что-то пошло не так при удалении");
+        }
+    }
 }
+/*
+folder1:
+- ffile1.txt
+- file2.txt
+- file34.txt
+- folder2:
+- - file1.txt
+- - file2.txt
+*/

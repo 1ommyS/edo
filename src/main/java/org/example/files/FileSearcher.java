@@ -16,5 +16,11 @@ public interface FileSearcher {
     File[] findFilesByNamePattern(String pattern);
 
     File[] findFilesByNamePart(String partOfFileName);
+
+    void printFoldersTree(String path, int catalogTabSize);
+
+    void deleteFile(String path);
+    void deleteCatalog(String path);
+
 }
 
