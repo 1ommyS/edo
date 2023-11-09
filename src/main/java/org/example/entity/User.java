@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import org.example.enums.Role;
 
 import java.text.MessageFormat;
 import java.util.UUID;
@@ -17,11 +18,12 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @Data
-@FieldDefaults(level = AccessLevel.PACKAGE) // package-private
+@FieldDefaults(level = AccessLevel.PRIVATE) // package-private
 public class User {
     UUID id;
     String name;
     String password;
+    Role role;
 
     @Override
     public String toString() {

@@ -2,8 +2,10 @@ package org.example.database;
 
 import lombok.Data;
 import org.example.entity.FileHMAC;
+import org.example.entity.Task;
 import org.example.entity.User;
 import org.example.mappers.FileHMACMapper;
+import org.example.mappers.TaskMapper;
 import org.example.mappers.UserMapper;
 
 import java.io.*;
@@ -52,6 +54,26 @@ public class Database {
         return res;
     }
 
+    public List<Task> readTasks(String filename) {
+        List<Task> res = new ArrayList<>();
+        String line;
+        FileReader fr;
+        BufferedReader br;
+        try {
+            fr = new FileReader(filename);
+            br = new BufferedReader(fr);
+            br.readLine();
+            while ((line = br.readLine()) != null) {
+                res.add(TaskMapper.convertStringToTask(line));
+            }
+            fr.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Файл не существует либо ошибка чтения", e);
+        }
+        return res;
+    }
+
+
     public List<FileHMAC> readFilesHMACs(String filename) {
         List<FileHMAC> res = new ArrayList<>();
         String line;
@@ -85,4 +107,20 @@ public class Database {
 
     }
 
+    public void writeTasksToFile(String filename, List<Task> tasks) {
+        List<Task> res = new ArrayList<>();
+        String line;
+        FileWriter fr;
+        BufferedWriter br;
+        try {
+            fr = new FileWriter(filename);
+            br = new BufferedWriter(fr);
+            for (Task task : tasks) {
+                br.write(task.toString()+"\n");
+            }
+            fr.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Файл не существует либо ошибка чтения", e);
+        }
+    }
 }

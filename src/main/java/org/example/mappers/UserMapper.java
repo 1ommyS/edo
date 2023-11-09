@@ -1,6 +1,7 @@
 package org.example.mappers;
 
 import org.example.entity.User;
+import org.example.enums.Role;
 
 import java.util.UUID;
 
@@ -16,10 +17,13 @@ public class UserMapper {
             throw new IllegalArgumentException("Количество разделителей в считываемом файле неверное");
         }
 
+        // id,name,password,role
+
         return User.builder()
                 .id(UUID.fromString(split[0]))
                 .name(split[1])
                 .password(split[2])
+                .role(Role.valueOf(split[3]))
                 .build();
     }
 
