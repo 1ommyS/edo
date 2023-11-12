@@ -17,15 +17,7 @@ public class UserService {
 
     public void displayMyTasks(User authenticatedUser) {
         List<Task> tasks = service.getTasks();
-      /*  for (var task : tasks) {
-          *//*  if (task.getSolver_id().equals(authenticatedUser.getId())) {
-                System.out.println(task);
-            }*//*
-            if (Objects.equals(task.getSolver_id(), authenticatedUser.getId())) {
-                System.out.println(task);
-            }
-        }
-*/
+
         tasks.parallelStream()
                 .filter(task -> Objects.equals(task.getSolver_id(), authenticatedUser.getId()))
                 .forEach(System.out::println);
@@ -38,6 +30,7 @@ public class UserService {
                 .filter(task -> Objects.equals(task.getSolver_id(), authenticatedUser.getId()) && !task.isCompleted())
                 .forEach(System.out::println);
     }
+
     public void displayMyCompletedTasks(User authenticatedUser) {
         List<Task> tasks = service.getTasks();
 

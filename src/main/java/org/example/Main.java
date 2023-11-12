@@ -9,13 +9,14 @@ import java.io.File;
 
 */
 
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Locale;
+import org.example.database.Database;
+import org.example.entity.User;
+import org.example.service.AuthorisationService;
+import org.example.utils.AdminMenu;
+import org.example.utils.Menu;
+import org.example.utils.UserMenu;
+
+import java.util.Scanner;
 
 /**
  * @author 1ommy
@@ -24,16 +25,37 @@ import java.util.Locale;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        // TODO: 1) система ролей
-        //  2) старшие пользователи могут назначить задачи младшим и младшие могут просматривать
-        //  свои задачи новые,старые, помечать задачу выполненной
+        Scanner scanner = new Scanner(System.in);
+        User authorisedUser;
+        Menu menu = null;
 
-//        LocalDate
-//            LocalDateTime
-//                Date
-        Calendar mydate = new GregorianCalendar();
-        String mystring = "January 2, 2010";
-        Date thedate = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH).parse(mystring);
-        mydate.setTime(thedate);
+        System.out.println("""
+                Добрый день!Вы попали в приложение для электронного документооборота!
+                Чтобы продолжить, вам необходимо авторизоваться.
+                """);
+
+        while (true) {
+            AuthorisationService authorisationService = new AuthorisationService(new Database());
+            System.out.println("Введите логин и пароль");
+            var login = scanner.nextLine();
+            var password = scanner.nextLine();
+
+            var resultOfAuthorisation = authorisationService.tryToAuthoriseUser(login, password);
+
+            if (resultOfAuthorisation.getLeft()) {
+                System.out.println("Вы успешно авторизовались");
+                authorisedUser = resultOfAuthorisation.getRight();
+                break;
+            }
+        }
+
+        switch (authorisedUser.getRole()) {
+            case ADMIN -> menu = new AdminMenu();
+            case DEVELOPER -> menu = new UserMenu();
+        }
+
+        menu.displayMenu();
+
+        menu.handle(authorisedUser);
     }
 }

@@ -24,11 +24,6 @@ public class SignFileService {
     private final Database database;
 
     public void signFile(String fileName, String keyWord) {
-        /*
-        1) хэшируем кейворд
-        2) присваем его конкретному файлу
-        3) делаем запись в таблицу связывающую файл и кейворд
-         */
 
         String hmacForFile = new HmacUtils(HMAC_SHA_224, secretKey.getBytes()).hmacHex(keyWord);
 

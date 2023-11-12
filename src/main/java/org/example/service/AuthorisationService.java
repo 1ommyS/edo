@@ -1,12 +1,10 @@
 package org.example.service;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.HmacUtils;
-import org.example.entity.User;
 import org.example.database.Database;
+import org.example.entity.User;
+import org.modelmapper.internal.Pair;
 
 import java.util.UUID;
 
@@ -22,7 +20,7 @@ public class AuthorisationService {
     private final Database database;
     private final String table = "users";
 
-    public boolean tryToAuthoriseUser(String name, String password) {
+    public Pair<Boolean, User> tryToAuthoriseUser(String name, String password) {
         var users = database.readUsers(table);
         User user = users
                 .parallelStream()
@@ -35,7 +33,7 @@ public class AuthorisationService {
 
         String hashedPassword = new HmacUtils(HMAC_SHA_224, secret.getBytes()).hmacHex(password);
 
-        return hashedPassword.equals(user.getPassword());
+        return Pair.of(hashedPassword.equals(user.getPassword()), user);
     }
 
     public void createUser(String name, String password) {
