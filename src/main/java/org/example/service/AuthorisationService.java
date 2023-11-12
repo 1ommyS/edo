@@ -6,6 +6,7 @@ import org.example.database.Database;
 import org.example.entity.User;
 import org.modelmapper.internal.Pair;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.apache.commons.codec.digest.HmacAlgorithms.HMAC_SHA_224;
@@ -19,6 +20,7 @@ public class AuthorisationService {
     private final String secret = "secret";
     private final Database database;
     private final String table = "users";
+
 
     public Pair<Boolean, User> tryToAuthoriseUser(String name, String password) {
         var users = database.readUsers(table);
@@ -48,5 +50,8 @@ public class AuthorisationService {
                 .build();
 
         database.insertIntoTable(table, newUser.toString());
+    }
+    public List<User> getUsers() {
+        return database.readUsers(table);
     }
 }
