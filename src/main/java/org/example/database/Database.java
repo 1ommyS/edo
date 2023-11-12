@@ -9,8 +9,10 @@ import org.example.mappers.TaskMapper;
 import org.example.mappers.UserMapper;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,10 +23,10 @@ import java.util.List;
 @Data
 public class Database {
 
-    private final String basePath = "src/resources/files";
-
-    public void createTable(String title, String... columns) throws IOException {
-        var file = Path.of(basePath, title + ".csv").toFile();
+    private String basePath = "/Users/1ommy/development/IT-park/lessons/edo/src" +
+            "/main/resources/files";
+    public void createTable(String title, String... columns) throws IOException, URISyntaxException {
+        var file = Path.of("/Users/1ommy/development/IT-park/lessons/edo/src/main/resources/files", title + ".csv").toFile();
 
         String firstRow = String.join(",", columns);
 
@@ -96,6 +98,7 @@ public class Database {
 
     public void insertIntoTable(String table, String data) {
         try {
+
             FileOutputStream fileOut = new FileOutputStream(Path.of(basePath, table + ".csv").toString());
             ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
             objectOut.writeObject(data);
@@ -116,6 +119,23 @@ public class Database {
             fr = new FileWriter(filename);
             br = new BufferedWriter(fr);
             for (Task task : tasks) {
+                br.write(task.toString()+"\n");
+            }
+            fr.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Файл не существует либо ошибка чтения", e);
+        }
+    }
+    public void writeUsersToFile(String filename, List<User> users) {
+        List<User> res = new ArrayList<>();
+        String line;
+        FileWriter fr;
+        BufferedWriter br;
+        System.out.println(users.size());
+        try {
+            fr = new FileWriter(basePath+"/"+filename);
+            br = new BufferedWriter(fr);
+            for (var task : users) {
                 br.write(task.toString()+"\n");
             }
             fr.close();

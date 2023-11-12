@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.example.enums.Role;
 
-import java.text.MessageFormat;
 import java.util.UUID;
 
 /**
@@ -27,6 +26,7 @@ public class User {
 
     @Override
     public String toString() {
-        return MessageFormat.format("{},{},{}", id, name, password);
+        System.out.println(id + "," + name + "," + password + "," + role);
+        return id + "," + name + "," + password + "," + role;
     }
 }

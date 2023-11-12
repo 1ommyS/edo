@@ -11,12 +11,15 @@ import java.io.File;
 
 import org.example.database.Database;
 import org.example.entity.User;
+import org.example.enums.Role;
 import org.example.service.AuthorisationService;
 import org.example.utils.AdminMenu;
 import org.example.utils.Menu;
 import org.example.utils.UserMenu;
 
+import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.UUID;
 
 /**
  * @author 1ommy
@@ -24,7 +27,17 @@ import java.util.Scanner;
  */
 
 public class Main {
+    public static void puk() {
+        var users = new ArrayList<User>();
+        users.add(new User(UUID.randomUUID(), "admin", "admin", Role.ADMIN));
+        users.add(new User(UUID.randomUUID(), "developer", "developer", Role.DEVELOPER));
+
+        Database database = new Database();
+        database.writeUsersToFile("users.csv", users);
+    }
+
     public static void main(String[] args) throws Exception {
+        puk();
         Scanner scanner = new Scanner(System.in);
         User authorisedUser;
         Menu menu = null;
