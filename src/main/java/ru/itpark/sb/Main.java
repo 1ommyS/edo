@@ -10,7 +10,6 @@ import ru.itpark.sb.ui.ConsoleUI;
  */
 public class Main {
     public static void main(String[] args) {
-        // Инициализация слоев приложения
         DocumentRepository repository = new DocumentRepository();
         EncryptionService encryptionService = new EncryptionService();
         DocumentService documentService = new DocumentService(repository, encryptionService);
