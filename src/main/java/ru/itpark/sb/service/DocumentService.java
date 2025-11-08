@@ -5,12 +5,14 @@ import ru.itpark.sb.domain.Document;
 import ru.itpark.sb.repository.DocumentRepository;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
- * Сервис для работы с документами (бизнес-логика)
+ * Сервис для работы с документами (бизнес-логика) с использованием Stream API
  */
 @RequiredArgsConstructor
 public class DocumentService {
@@ -34,31 +36,29 @@ public class DocumentService {
     }
 
     /**
-     * Получить документ по ID с расшифровкой
+     * Получить документ по ID с расшифровкой используя Stream API и Optional
      */
     public Optional<String> getDocumentContent(String id, String password) {
-        Optional<Document> documentOpt = repository.findById(id);
-        if (documentOpt.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Document document = documentOpt.get();
-
-        // Проверка пароля
-        if (!encryptionService.verifyPassword(password, document.getPasswordHash())) {
-            throw new SecurityException("Неверный пароль");
-        }
-
-        // Дешифрование содержимого
-        try {
-            byte[] decryptedContent = encryptionService.decrypt(
-                    document.getEncryptedContent(),
-                    password
-            );
-            return Optional.of(new String(decryptedContent, StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка при расшифровке документа: " + e.getMessage(), e);
-        }
+        return repository.findById(id)
+                .filter(doc -> encryptionService.verifyPassword(password, doc.getPasswordHash()))
+                .map(doc -> {
+                    try {
+                        byte[] decryptedContent = encryptionService.decrypt(
+                                doc.getEncryptedContent(),
+                                password
+                        );
+                        return new String(decryptedContent, StandardCharsets.UTF_8);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Ошибка при расшифровке документа: " + e.getMessage(), e);
+                    }
+                })
+                .or(() -> {
+                    // Проверка существования документа для более информативной ошибки
+                    if (repository.existsById(id)) {
+                        throw new SecurityException("Неверный пароль");
+                    }
+                    return Optional.empty();
+                });
     }
 
     /**
@@ -69,10 +69,12 @@ public class DocumentService {
     }
 
     /**
-     * Получить все документы
+     * Получить все документы используя Stream API
      */
     public List<Document> getAllDocuments() {
-        return repository.findAll();
+        return repository.findAll().stream()
+                .sorted(Comparator.comparing(Document::getCreatedAt).reversed())
+                .collect(Collectors.toList());
     }
 
     /**
@@ -83,77 +85,59 @@ public class DocumentService {
     }
 
     /**
-     * Поиск документов по имени
+     * Поиск документов по имени используя Stream API
      */
     public List<Document> searchDocumentsByName(String name) {
         return repository.findByNameContaining(name);
     }
 
     /**
-     * Обновить документ
+     * Обновить документ используя Stream API и Optional
      */
     public Document updateDocument(String id, String newContent, String password) {
-        Optional<Document> documentOpt = repository.findById(id);
-        if (documentOpt.isEmpty()) {
-            throw new IllegalArgumentException("Документ с ID " + id + " не найден");
-        }
-
-        Document document = documentOpt.get();
-
-        // Проверка пароля
-        if (!encryptionService.verifyPassword(password, document.getPasswordHash())) {
-            throw new SecurityException("Неверный пароль");
-        }
-
-        // Шифрование нового содержимого
-        byte[] encryptedContent = encryptionService.encrypt(
-                newContent.getBytes(StandardCharsets.UTF_8),
-                password
-        );
-
-        document.setEncryptedContent(encryptedContent);
-        repository.save(document);
-        return document;
+        return repository.findById(id)
+                .map(doc -> {
+                    if (!encryptionService.verifyPassword(password, doc.getPasswordHash())) {
+                        throw new SecurityException("Неверный пароль");
+                    }
+                    byte[] encryptedContent = encryptionService.encrypt(
+                            newContent.getBytes(StandardCharsets.UTF_8),
+                            password
+                    );
+                    doc.setEncryptedContent(encryptedContent);
+                    repository.save(doc);
+                    return doc;
+                })
+                .orElseThrow(() -> new IllegalArgumentException("Документ с ID " + id + " не найден"));
     }
 
     /**
-     * Изменить пароль документа
+     * Изменить пароль документа используя Stream API и Optional
      */
     public boolean changePassword(String id, String oldPassword, String newPassword) {
-        Optional<Document> documentOpt = repository.findById(id);
-        if (documentOpt.isEmpty()) {
-            return false;
-        }
-
-        Document document = documentOpt.get();
-
-        // Проверка старого пароля
-        if (!encryptionService.verifyPassword(oldPassword, document.getPasswordHash())) {
-            throw new SecurityException("Неверный старый пароль");
-        }
-
-        // Расшифровка с старым паролем
-        byte[] decryptedContent = encryptionService.decrypt(
-                document.getEncryptedContent(),
-                oldPassword
-        );
-
-        // Шифрование с новым паролем
-        byte[] newEncryptedContent = encryptionService.encrypt(decryptedContent, newPassword);
-        String newPasswordHash = encryptionService.hashPassword(newPassword);
-
-        document.setEncryptedContent(newEncryptedContent);
-        document.setPasswordHash(newPasswordHash);
-        repository.save(document);
-
-        return true;
+        return repository.findById(id)
+                .map(doc -> {
+                    if (!encryptionService.verifyPassword(oldPassword, doc.getPasswordHash())) {
+                        throw new SecurityException("Неверный старый пароль");
+                    }
+                    byte[] decryptedContent = encryptionService.decrypt(
+                            doc.getEncryptedContent(),
+                            oldPassword
+                    );
+                    byte[] newEncryptedContent = encryptionService.encrypt(decryptedContent, newPassword);
+                    String newPasswordHash = encryptionService.hashPassword(newPassword);
+                    doc.setEncryptedContent(newEncryptedContent);
+                    doc.setPasswordHash(newPasswordHash);
+                    repository.save(doc);
+                    return true;
+                })
+                .orElse(false);
     }
 
     /**
-     * Получить количество документов
+     * Получить количество документов используя Stream API
      */
     public int getDocumentCount() {
         return repository.count();
     }
 }
-
