@@ -95,8 +95,8 @@ class DocumentTest {
 
         // then
         assertThat(toString).contains("Document");
-        assertThat(toString).contains("id='1'");
-        assertThat(toString).contains("name='Test Document'");
+        assertThat(toString).contains("id=1");
+        assertThat(toString).contains("name=Test Document");
         assertThat(toString).contains("createdAt=");
         assertThat(toString).contains("updatedAt=");
     }

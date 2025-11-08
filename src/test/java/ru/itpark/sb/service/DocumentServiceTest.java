@@ -102,6 +102,7 @@ class DocumentServiceTest {
 
         Document document = new Document(id, "Test", encryptedContent, passwordHash);
         when(repository.findById(id)).thenReturn(Optional.of(document));
+        when(repository.existsById(id)).thenReturn(true);
         when(encryptionService.verifyPassword(password, passwordHash)).thenReturn(false);
 
         // when & then
@@ -110,6 +111,7 @@ class DocumentServiceTest {
                 .hasMessage("Неверный пароль");
         
         verify(repository).findById(id);
+        verify(repository).existsById(id);
         verify(encryptionService).verifyPassword(password, passwordHash);
         verify(encryptionService, never()).decrypt(any(), any());
     }
@@ -120,6 +122,7 @@ class DocumentServiceTest {
         // given
         String id = "non-existent";
         when(repository.findById(id)).thenReturn(Optional.empty());
+        when(repository.existsById(id)).thenReturn(false);
 
         // when
         Optional<String> result = documentService.getDocumentContent(id, "password");
@@ -127,6 +130,7 @@ class DocumentServiceTest {
         // then
         assertThat(result).isEmpty();
         verify(repository).findById(id);
+        verify(repository).existsById(id);
         verify(encryptionService, never()).verifyPassword(any(), any());
     }
 

@@ -3,21 +3,33 @@ package ru.itpark.sb.repository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ru.itpark.sb.domain.Document;
+import ru.itpark.sb.service.FileStorageService;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 @DisplayName("Тесты для DocumentRepository")
 class DocumentRepositoryTest {
+
+    @Mock
+    private FileStorageService fileStorageService;
 
     private DocumentRepository repository;
 
     @BeforeEach
     void setUp() {
-        repository = new DocumentRepository();
+        // Мокаем загрузку метаданных при инициализации
+        when(fileStorageService.loadMetadata()).thenReturn("[]");
+        repository = new DocumentRepository(fileStorageService);
     }
 
     @Test
@@ -34,6 +46,10 @@ class DocumentRepositoryTest {
         assertThat(found).isPresent();
         assertThat(found.get().getId()).isEqualTo("1");
         assertThat(found.get().getName()).isEqualTo("Test Document");
+        
+        // Проверяем, что файловый сервис был вызван
+        verify(fileStorageService, atLeastOnce()).saveDocumentContent(anyString(), any(byte[].class));
+        verify(fileStorageService, atLeastOnce()).saveMetadata(anyString());
     }
 
     @Test
@@ -96,6 +112,7 @@ class DocumentRepositoryTest {
         // given
         Document document = createTestDocument("1", "Test Document");
         repository.save(document);
+        clearInvocations(fileStorageService); // Очищаем инвокации после save для чистой проверки
 
         // when
         boolean deleted = repository.deleteById("1");
@@ -103,6 +120,10 @@ class DocumentRepositoryTest {
         // then
         assertThat(deleted).isTrue();
         assertThat(repository.findById("1")).isEmpty();
+        
+        // Проверяем, что файловый сервис был вызван для удаления
+        verify(fileStorageService).deleteDocumentContent("1");
+        verify(fileStorageService).saveMetadata(anyString());
     }
 
     @Test
